@@ -13,7 +13,7 @@ require('http').createServer((req, res) => {
   if (req.method === 'OPTIONS') { res.writeHead(200); res.end(); return; }
   if (req.method === 'GET') {
     res.writeHead(200, {'Content-Type':'application/json'});
-    res.end(JSON.stringify({status:'running'})); return;
+    res.end(JSON.stringify({status:'running', key: API_KEY.slice(0,8)})); return;
   }
   if (req.method !== 'POST') { res.writeHead(405); res.end(); return; }
 
@@ -24,13 +24,22 @@ require('http').createServer((req, res) => {
   req.on('end', () => {
     let parsed = {};
     try { parsed = JSON.parse(body); } catch(e) {}
-    parsed.api_key    = API_KEY;
-    parsed.lang       = parsed.lang       || 'en';
-    parsed.house_type = parsed.house_type || 'whole-sign';
-    parsed.zodiac_type= parsed.zodiac_type|| 'sidereal';
-    const newBody = JSON.stringify(parsed);
+    
+    // Build fresh body with all required fields
+    const newBody = JSON.stringify({
+      dob:         parsed.dob,
+      tob:         parsed.tob,
+      lat:         parsed.lat,
+      lon:         parsed.lon,
+      tz:          parsed.tz,
+      lang:        'en',
+      house_type:  'whole-sign',
+      zodiac_type: 'sidereal',
+      api_key:     API_KEY
+    });
 
-    console.log(`POST ${path}`, newBody.slice(0, 150));
+    console.log(`POST ${path} -> api.vedicastroapi.com/v3-json${path}`);
+    console.log('Body:', newBody.slice(0, 200));
 
     const options = {
       hostname: API_BASE,
@@ -46,7 +55,7 @@ require('http').createServer((req, res) => {
       let data = '';
       apiRes.on('data', chunk => data += chunk);
       apiRes.on('end', () => {
-        console.log(`Response ${apiRes.statusCode}:`, data.slice(0, 400));
+        console.log(`Response ${apiRes.statusCode}:`, data.slice(0, 300));
         res.writeHead(apiRes.statusCode, {
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*'
@@ -56,6 +65,7 @@ require('http').createServer((req, res) => {
     });
 
     apiReq.on('error', err => {
+      console.error('Error:', err.message);
       res.writeHead(500, {'Content-Type':'application/json'});
       res.end(JSON.stringify({error: err.message}));
     });
