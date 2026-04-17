@@ -13,7 +13,7 @@ require('http').createServer((req, res) => {
   if (req.method === 'OPTIONS') { res.writeHead(200); res.end(); return; }
   if (req.method === 'GET') {
     res.writeHead(200, {'Content-Type':'application/json'});
-    res.end(JSON.stringify({status:'running', api:'AstrologyAPI.com'})); return;
+    res.end(JSON.stringify({status:'running', api:'AstrologyAPI.com v1'})); return;
   }
   if (req.method !== 'POST') { res.writeHead(405); res.end(); return; }
 
@@ -53,7 +53,7 @@ require('http').createServer((req, res) => {
       let data = '';
       apiRes.on('data', chunk => data += chunk);
       apiRes.on('end', () => {
-        console.log(`Response ${apiRes.statusCode}:`, data.slice(0,400));
+        console.log(`Response ${apiRes.statusCode}:`, data.slice(0, 500));
         res.writeHead(apiRes.statusCode, {
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*'
